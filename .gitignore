@@ -1,0 +1,11 @@
+# File extensions
+*.parquet
+*.xlsx
+*.csv
+
+# Notebooks
+*.ipynb
+
+# Airflow folders
+logs/
+plugins/
