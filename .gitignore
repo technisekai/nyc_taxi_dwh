@@ -9,3 +9,6 @@
 # Airflow folders
 logs/
 plugins/
+
+# Mac cache
+.DS_Store
