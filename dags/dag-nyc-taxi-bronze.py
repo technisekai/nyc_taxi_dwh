@@ -1,15 +1,22 @@
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator, ShortCircuitOperator
+from airflow.operators.python_operator import PythonOperator, ShortCircuitOperator, BranchPythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.models import Variable
 import requests
 import wget
-import pandas as pd
+import polars as pl
+import os
 from datetime import datetime
 from cores.connection import connect
 from cores.etl import clickhouse_create_table, clickhouse_batch_load
 
-def is_file_exists(url: str):
+def is_file_in_local(path: str, task_names: list):
+    if os.path.isfile(path):
+        return task_names[0]
+    else:
+        return task_names[1]
+
+def is_file_in_url(url: str):
     # Check if file exists in url
     res = requests.head(
         url, 
@@ -27,11 +34,11 @@ def get_file(dir_path: str, url: str):
 
 def load_data(path: str, database: str, creds: dict):
     # Read dataframe
-    df = pd.read_parquet(path)
+    df = pl.scan_parquet(path)
     table_name = f"`{database}`.`{path.split('/')[-1].split('_')[0]}`"
     conn = connect(db_type="clickhouse", creds=creds)
     # Check is destination table exists
-    schema = df.dtypes.apply(lambda x: x.name).to_dict()
+    schema = dict(zip(df.columns, df.dtypes))
     clickhouse_create_table(conn, table_name, schema)
     # Inject data
     clickhouse_batch_load(conn, table_name, df)
@@ -63,9 +70,22 @@ with DAG(
 
     for date in bronze_config["dates"]:
         for taxi in bronze_config["taxi_type"]:
-            check_file = ShortCircuitOperator(
-                task_id=f"check_{taxi}_{date}_file",
-                python_callable=is_file_exists,
+            check_file_local = BranchPythonOperator(
+                task_id=f'is_{taxi}_{date}_in_local',
+                provide_context=True,
+                python_callable=is_file_in_local,
+                op_kwargs={
+                    "path": f"/opt/airflow/dags/data/{taxi}_tripdata_{date}.parquet",
+                    "task_names": [
+                        f"load_{taxi}_{date}_into_bronze",
+                        f"is_{taxi}_{date}_url_exists"
+                    ]
+                }
+            )
+
+            check_file_url = ShortCircuitOperator(
+                task_id=f"is_{taxi}_{date}_url_exists",
+                python_callable=is_file_in_url,
                 op_kwargs={
                     "url": f"https://d37ci6vzurychx.cloudfront.net/trip-data/{taxi}_tripdata_{date}.parquet"
                 }
@@ -90,4 +110,4 @@ with DAG(
                 }
             )
 
-            start >> check_file >> download_file >> load_file_into_db >> end
+            start >> check_file_local >> [load_file_into_db, check_file_url >> download_file] >> end

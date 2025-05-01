@@ -1,17 +1,17 @@
-import pandas as pd
+import polars as pl
 
 def clickhouse_exec(conn, query: str):
     conn.command(query)
 
 def clickhouse_create_table(conn, destination_table_name: str, schema: dict):
     for x in schema.keys():
-        if schema[x] == 'object':
+        if schema[x].lower() == 'object' or 'string':
             schema[x] = 'Nullable(varchar)'
         elif 'datetime' in schema[x]:
             schema[x] = 'Nullable(datetime)'
-        elif schema[x] == 'int64':
+        elif schema[x].lower() == 'int64':
             schema[x] = 'Nullable(Int64)'
-        elif schema[x] == 'float64':
+        elif schema[x].lower() == 'float64':
             schema[x] = 'Nullable(Float64)'
         else:
             pass
@@ -21,13 +21,15 @@ def clickhouse_create_table(conn, destination_table_name: str, schema: dict):
     clickhouse_exec(conn, query)
 
 # ETL
-def clickhouse_batch_load(conn, destination_table_name: str, df: pd.DataFrame, chunksize=500):
+def clickhouse_batch_load(conn, destination_table_name: str, df, chunksize=500):
     columns = list(df.columns)
+    rows =  df.collect().height
     print("INF batch load: ", end="")
-    for idx in range(0, df.shape[0], chunksize):
+    for idx in range(0, rows, chunksize):
+        tmp_df = df.slice(idx, idx+chunksize).collect()
         conn.insert(
             destination_table_name, 
-            df.iloc[idx:idx+chunksize].to_numpy(), 
+            tmp_df.to_numpy(), 
             column_names=columns
         )
         print(f"{idx}", end=" ")
