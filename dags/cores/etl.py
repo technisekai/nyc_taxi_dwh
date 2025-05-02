@@ -5,13 +5,13 @@ def clickhouse_exec(conn, query: str):
 
 def clickhouse_create_table(conn, destination_table_name: str, schema: dict):
     for x in schema.keys():
-        if schema[x].lower() == 'object' or 'string':
+        if str(schema[x]).lower() == 'object' or 'string':
             schema[x] = 'Nullable(varchar)'
-        elif 'datetime' in schema[x]:
+        elif 'datetime' in str(schema[x]):
             schema[x] = 'Nullable(datetime)'
-        elif schema[x].lower() == 'int64':
+        elif str(schema[x]).lower() == 'int64':
             schema[x] = 'Nullable(Int64)'
-        elif schema[x].lower() == 'float64':
+        elif str(schema[x]).lower() == 'float64':
             schema[x] = 'Nullable(Float64)'
         else:
             pass

@@ -10,27 +10,22 @@ from datetime import datetime
 from cores.connection import connect
 from cores.etl import clickhouse_create_table, clickhouse_batch_load
 
-def is_file_in_local(path: str, task_names: list):
-    if os.path.isfile(path):
-        return task_names[0]
+def get_the_file(path_file: str, url: str):
+    # Checking file is it exists in local
+    is_file_exists = os.path.isfile(path_file)
+    if not is_file_exists:
+        # Checking url is it valid
+        is_url_valid = requests.head(url, timeout=30).status_code
+        if is_url_valid == 200:
+            print(f"file not exists, download file from {url}")
+            wget.download(url=url, out=path_file)
+            return True
+        else:
+            print(f"file not exists, but {url} is broken")
+            return False
     else:
-        return task_names[1]
-
-def is_file_in_url(url: str):
-    # Check if file exists in url
-    res = requests.head(
-        url, 
-        timeout=30
-    )
-    if res.status_code == 200:
+        print(f"file in local, skipped")
         return True
-    return False
-
-def get_file(dir_path: str, url: str):
-    filename = url.split('/')[-1]
-    path = f"{dir_path}/"
-    # Download file
-    wget.download(url=url, out=path)
 
 def load_data(path: str, database: str, creds: dict):
     # Read dataframe
@@ -70,32 +65,11 @@ with DAG(
 
     for date in bronze_config["dates"]:
         for taxi in bronze_config["taxi_type"]:
-            check_file_local = BranchPythonOperator(
-                task_id=f'is_{taxi}_{date}_in_local',
-                provide_context=True,
-                python_callable=is_file_in_local,
+            get_file = ShortCircuitOperator(
+                task_id=f"get_{taxi}_{date}_file",
+                python_callable=get_the_file,
                 op_kwargs={
-                    "path": f"/opt/airflow/dags/data/{taxi}_tripdata_{date}.parquet",
-                    "task_names": [
-                        f"load_{taxi}_{date}_into_bronze",
-                        f"is_{taxi}_{date}_url_exists"
-                    ]
-                }
-            )
-
-            check_file_url = ShortCircuitOperator(
-                task_id=f"is_{taxi}_{date}_url_exists",
-                python_callable=is_file_in_url,
-                op_kwargs={
-                    "url": f"https://d37ci6vzurychx.cloudfront.net/trip-data/{taxi}_tripdata_{date}.parquet"
-                }
-            )
-
-            download_file = PythonOperator(
-                task_id=f"download_{taxi}_{date}_dataset",
-                python_callable=get_file,
-                op_kwargs={
-                    "dir_path": "/opt/airflow/dags/data",
+                    "path_file": f"/opt/airflow/dags/data/{taxi}_tripdata_{date}.parquet",
                     "url": f"https://d37ci6vzurychx.cloudfront.net/trip-data/{taxi}_tripdata_{date}.parquet"
                 }
             )
@@ -110,4 +84,4 @@ with DAG(
                 }
             )
 
-            start >> check_file_local >> [load_file_into_db, check_file_url >> download_file] >> end
+            start >> get_file >> load_file_into_db >> end
