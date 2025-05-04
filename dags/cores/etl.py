@@ -5,18 +5,14 @@ def clickhouse_exec(conn, query: str):
 
 def clickhouse_create_table(conn, destination_table_name: str, schema: dict):
     for x in schema.keys():
-        pl_datatype = str(schema[x]).lower()
-
-        if pl_datatype in ('object', 'string'):
+        if str(schema[x]).lower() == 'object' or 'string':
             schema[x] = 'Nullable(varchar)'
-        elif 'datetime' in pl_datatype:
+        elif 'datetime' in str(schema[x]):
             schema[x] = 'Nullable(datetime)'
-        elif pl_datatype == 'int64':
+        elif str(schema[x]).lower() == 'int64':
             schema[x] = 'Nullable(Int64)'
-        elif pl_datatype == 'float64':
+        elif str(schema[x]).lower() == 'float64':
             schema[x] = 'Nullable(Float64)'
-        elif pl_datatype == 'int32':
-            schema[x] = 'Nullable(Int32)'
         else:
             pass
     clickhouse_schema = ", ".join(f"{key} {value}" for key, value in schema.items())
@@ -26,12 +22,11 @@ def clickhouse_create_table(conn, destination_table_name: str, schema: dict):
 
 # ETL
 def clickhouse_batch_load(conn, destination_table_name: str, df, chunksize=500):
-    columns = list(df.collect_schema().names())
+    columns = list(df.columns)
     rows =  df.collect().height
     print("INF batch load: ", end="")
     for idx in range(0, rows, chunksize):
         tmp_df = df.slice(idx, idx+chunksize).collect()
-        tmp_df = tmp_df.to_pandas()
         conn.insert(
             destination_table_name, 
             tmp_df.to_numpy(), 
