@@ -33,7 +33,10 @@ def load_data(path: str, database: str, creds: dict):
     table_name = f"`{database}`.`{path.split('/')[-1].split('_')[0]}`"
     conn = connect(db_type="clickhouse", creds=creds)
     # Check is destination table exists
-    schema = dict(zip(df.columns, df.dtypes))
+    schema = dict(zip(
+        df.collect_schema().names(), 
+        df.collect_schema().dtypes()
+    ))
     clickhouse_create_table(conn, table_name, schema)
     # Inject data
     clickhouse_batch_load(conn, table_name, df)
