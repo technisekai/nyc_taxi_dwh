@@ -36,7 +36,7 @@
     nyc_bronze_config: {
         "env": "prod",
         "taxi_type": ["green", "yellow"],
-        "dates": ["2014-01"]
+        "dates": ["2024-01"]
     }
     ```
     _note: you can change dates in nyc_bronze_config to download or load taxi trip data in dates defined_
