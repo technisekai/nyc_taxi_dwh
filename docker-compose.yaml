@@ -85,6 +85,14 @@ x-airflow-common:
       condition: service_healthy
 
 services:
+  docker-proxy:
+    image: alpine/socat:1.8.0.3
+    command: "TCP4-LISTEN:2375,fork,reuseaddr UNIX-CONNECT:/var/run/docker.sock"
+    ports:
+      - "2376:2375"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      
   postgres:
     image: postgres:15
     environment:
@@ -302,6 +310,12 @@ services:
     ports:
       - "8123:8123"
     restart: always
+    networks:
+      - db-clickhouse
 
 volumes:
   postgres-db-volume:
+
+networks:
+  db-clickhouse:
+    external: true
