@@ -2,9 +2,9 @@ silver_stage:
   target: stg-silver
   outputs:
     stg-silver:
-      type: dwh-db-clickhouse
+      type: clickhouse
       schema: stg-silver          # Your target database/schema
-      host: clickhouse             # Or your hostname
+      host: dwh-db-clickhouse             # Or your hostname
       port: 8123
       user: admin
       password: 'admin123'                # Or your password
