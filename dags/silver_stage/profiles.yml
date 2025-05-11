@@ -1,7 +1,7 @@
 silver_stage:
   target: prod-silver
   outputs:
-    stg-silver:
+    prod-silver:
       type: clickhouse
       schema: prod-silver          # Your target database/schema
       host: dwh-db-clickhouse             # Or your hostname
