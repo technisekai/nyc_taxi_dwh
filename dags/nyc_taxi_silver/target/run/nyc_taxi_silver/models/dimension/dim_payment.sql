@@ -1,4 +1,14 @@
-{{ config(materialized='table') }}
+
+  
+    
+    
+    
+        
+         
+
+
+        insert into `stg-silver`.`dim_payment__dbt_backup`
+        ("payment_id", "payment_name", "_created_at")
 
 with src_dim_payment as (
     select 
@@ -38,3 +48,4 @@ with src_dim_payment as (
 )
 select *
 from src_dim_payment
+  

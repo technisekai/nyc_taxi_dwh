@@ -1,4 +1,4 @@
-{{ config(materialized='table') }}
+
 
 with src_dim_taxi as (
 

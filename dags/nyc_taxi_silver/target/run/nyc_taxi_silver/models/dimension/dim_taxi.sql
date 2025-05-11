@@ -1,4 +1,14 @@
-{{ config(materialized='table') }}
+
+  
+    
+    
+    
+        
+         
+
+
+        insert into `stg-silver`.`dim_taxi__dbt_backup`
+        ("taxi_id", "taxi_name", "_created_at")
 
 with src_dim_taxi as (
 
@@ -16,3 +26,4 @@ with src_dim_taxi as (
 
 select *
 from src_dim_taxi
+  

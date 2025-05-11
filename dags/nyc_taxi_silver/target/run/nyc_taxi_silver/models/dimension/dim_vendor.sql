@@ -1,4 +1,14 @@
-{{ config(materialized='table') }}
+
+  
+    
+    
+    
+        
+         
+
+
+        insert into `stg-silver`.`dim_vendor__dbt_backup`
+        ("vendor_id", "vendor_name", "_created_at")
 
 with src_dim_vendor as (
 
@@ -25,3 +35,4 @@ with src_dim_vendor as (
 
 select *
 from src_dim_vendor
+  
