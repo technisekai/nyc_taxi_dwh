@@ -32,7 +32,7 @@ with DAG(
         api_version='auto',
         auto_remove=True,
         command='run --project-dir /projects/silver_stage',
-        docker_url='tcp://docker-proxy:2375',
+        docker_url='tcp://dwh-docker-proxy:2375',
         network_mode='dwh-network',
         mounts= [
             Mount(
