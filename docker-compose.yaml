@@ -50,16 +50,16 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:custom}
+  image: ${AIRFLOW_IMAGE_NAME:-airflow-mod:v1.0.0}
   # build: .
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@dwh-airflow-postgres/airflow
     # For backward compatibility, with Airflow <2.3
-    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
-    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@dwh-airflow-postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@dwh-airflow-postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@dwh-airflow-redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
@@ -79,13 +79,13 @@ x-airflow-common:
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
-    redis:
+    dwh-airflow-redis:
       condition: service_healthy
-    postgres:
+    dwh-airflow-postgres:
       condition: service_healthy
 
 services:
-  docker-proxy:
+  dwh-docker-proxy:
     image: alpine/socat:1.8.0.3
     command: "TCP4-LISTEN:2375,fork,reuseaddr UNIX-CONNECT:/var/run/docker.sock"
     ports:
@@ -93,8 +93,9 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       
-  postgres:
+  dwh-airflow-postgres:
     image: postgres:15
+    container_name: dwh-airflow-postgres
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
@@ -108,7 +109,8 @@ services:
       start_period: 5s
     restart: always
 
-  redis:
+  dwh-airflow-redis:
+    container_name: dwh-airflow-redis
     image: redis:latest
     expose:
       - 6379
@@ -120,7 +122,7 @@ services:
       start_period: 30s
     restart: always
 
-  airflow-webserver:
+  dwh-airflow-webserver:
     <<: *airflow-common
     command: webserver
     ports:
@@ -134,10 +136,10 @@ services:
     restart: always
     depends_on:
       <<: *airflow-common-depends-on
-      airflow-init:
+      dwh-airflow-init:
         condition: service_completed_successfully
 
-  airflow-scheduler:
+  dwh-airflow-scheduler:
     <<: *airflow-common
     command: scheduler
     healthcheck:
@@ -149,10 +151,10 @@ services:
     restart: always
     depends_on:
       <<: *airflow-common-depends-on
-      airflow-init:
+      dwh-airflow-init:
         condition: service_completed_successfully
 
-  airflow-worker:
+  dwh-airflow-worker:
     <<: *airflow-common
     command: celery worker
     healthcheck:
@@ -171,10 +173,10 @@ services:
     restart: always
     depends_on:
       <<: *airflow-common-depends-on
-      airflow-init:
+      dwh-airflow-init:
         condition: service_completed_successfully
 
-  airflow-triggerer:
+  dwh-airflow-triggerer:
     <<: *airflow-common
     command: triggerer
     healthcheck:
@@ -186,10 +188,10 @@ services:
     restart: always
     depends_on:
       <<: *airflow-common-depends-on
-      airflow-init:
+      dwh-airflow-init:
         condition: service_completed_successfully
 
-  airflow-init:
+  dwh-airflow-init:
     <<: *airflow-common
     entrypoint: /bin/bash
     # yamllint disable rule:line-length
@@ -265,7 +267,7 @@ services:
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}:/sources
 
-  airflow-cli:
+  dwh-airflow-cli:
     <<: *airflow-common
     profiles:
       - debug
@@ -281,7 +283,7 @@ services:
   # You can enable flower by adding "--profile flower" option e.g. docker-compose --profile flower up
   # or by explicitly targeted on the command line e.g. docker-compose up flower.
   # See: https://docs.docker.com/compose/profiles/
-  flower:
+  dwh-airflow-flower:
     <<: *airflow-common
     command: celery flower
     profiles:
@@ -297,12 +299,12 @@ services:
     restart: always
     depends_on:
       <<: *airflow-common-depends-on
-      airflow-init:
+      dwh-airflow-init:
         condition: service_completed_successfully
   
-  clickhouse:
+  dwh-clickhouse:
     image: clickhouse:lts
-    container_name: clickhouse
+    container_name: dwh-db-clickhouse
     environment:
       - CLICKHOUSE_USER=admin
       - CLICKHOUSE_PASSWORD=admin123
@@ -316,5 +318,5 @@ volumes:
 
 networks:
   default:
-    name: in-net-dwh
+    name: dwh-network
     external: true
