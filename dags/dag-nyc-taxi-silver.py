@@ -27,17 +27,22 @@ with DAG(
     end = DummyOperator(task_id="end", dag=dag)
 
     silver_stage = DockerOperator(
-        task_id='fact_and_dim',
+        task_id='generate_fact_and_dim',
         image='dbt:custom',
         api_version='auto',
         auto_remove=True,
-        command='run --project-dir /project/nyc_taxi_silver',
+        command='run --project-dir /project/silver_stage',
         docker_url='tcp://docker-proxy:2375',
-        network_mode='test-networks',
+        network_mode='db-clickhouse',
         mounts= [
             Mount(
-                source='/Users/aaaa/Learns/nyc_taxi_dwh/dags/nyc_taxi_silver/',
-                target='/project/nyc_taxi_silver',
+                source='/Users/aaaa/Learns/nyc_taxi_dwh/dags/silver_stage/',
+                target='/projects/silver_stage',
+                type='bind'
+            ),
+            Mount(
+                source='/Users/aaaa/Learns/nyc_taxi_dwh/dags/silver_stage/profiles.yml',
+                target='/root/.dbt/profiles.yml',
                 type='bind'
             )
         ]
