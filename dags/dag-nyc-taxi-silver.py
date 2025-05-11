@@ -31,9 +31,9 @@ with DAG(
         image='dbt:custom',
         api_version='auto',
         auto_remove=True,
-        command='run --project-dir /project/silver_stage',
+        command='run --project-dir /projects/silver_stage',
         docker_url='tcp://docker-proxy:2375',
-        network_mode='db-clickhouse',
+        network_mode='in-net-dwh',
         mounts= [
             Mount(
                 source='/Users/aaaa/Learns/nyc_taxi_dwh/dags/silver_stage/',
