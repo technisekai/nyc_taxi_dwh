@@ -1,9 +1,9 @@
 silver_stage:
-  target: stg-silver
+  target: prod-silver
   outputs:
     stg-silver:
       type: clickhouse
-      schema: stg-silver          # Your target database/schema
+      schema: prod-silver          # Your target database/schema
       host: dwh-db-clickhouse             # Or your hostname
       port: 8123
       user: admin
