@@ -16,3 +16,10 @@ plugins/
 
 # Python cache
 __pycache__
+
+# DBT
+dags/silver_stage/target/
+dags/silver_stage/dbt_packages/
+dags/silver_stage/logs/
+
+.gitignore
