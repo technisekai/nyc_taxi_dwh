@@ -310,12 +310,11 @@ services:
     ports:
       - "8123:8123"
     restart: always
-    networks:
-      - db-clickhouse
 
 volumes:
   postgres-db-volume:
 
 networks:
-  db-clickhouse:
+  default:
+    name: in-net-dwh
     external: true
