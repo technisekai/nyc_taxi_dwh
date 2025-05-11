@@ -28,12 +28,12 @@ with DAG(
 
     silver_stage = DockerOperator(
         task_id='generate_fact_and_dim',
-        image='dbt:custom',
+        image='dbt-mod:v1.0.0',
         api_version='auto',
         auto_remove=True,
         command='run --project-dir /projects/silver_stage',
         docker_url='tcp://docker-proxy:2375',
-        network_mode='in-net-dwh',
+        network_mode='dwh-network',
         mounts= [
             Mount(
                 source='/Users/aaaa/Learns/nyc_taxi_dwh/dags/silver_stage/',
