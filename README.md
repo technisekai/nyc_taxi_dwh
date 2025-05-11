@@ -17,6 +17,7 @@
 
 ## How to run
 1. run `bash init-tools.sh`
+2. create silver database `create database prod-silver;` using tools like dbeaver, etc
 2. access airflow (https://localhost:8080) then execute bronze and silver dags
 
 ## Descriptions
