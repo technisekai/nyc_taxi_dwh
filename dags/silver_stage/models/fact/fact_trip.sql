@@ -13,7 +13,7 @@ with src_yellow as (
 		y.tip_amount,
 		y.total_amount,
 		y.mta_tax
-	from `stg-bronze`.yellow y 
+	from `prod-bronze`.yellow y 
 ),
 src_green as (
 	select distinct
@@ -29,7 +29,7 @@ src_green as (
 		g.total_amount,
 		g.mta_tax,
 		g.extra
-	from `stg-bronze`.green g 
+	from `prod-bronze`.green g 
 ),
 trf as (
 	select distinct
