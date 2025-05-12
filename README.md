@@ -39,7 +39,9 @@
         "dates": ["2024-01"]
     }
     ```
-    _note: you can change dates in nyc_bronze_config to download or load taxi trip data in dates defined_
+    _**\*note: pleas adjust the conn_dwh_secret variable as is you defined in DB\_\* key in .env file**_
+    
+    _*note: you can change dates in nyc_bronze_config to download or load taxi trip data in dates defined_
 4. then access airflow (https://localhost:8080) and execute silver, bronze pipelines
 
 ## Descriptions
