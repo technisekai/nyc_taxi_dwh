@@ -16,7 +16,7 @@
 - Create dashboard to show insight
 
 ## How to run
-1. run `bash init-tools.sh`
+1. run `bash labs-init.sh`
 2. run this following sql to create databases using tools like dbeaver, etc
     ```
     create database `prod-bronze`;
@@ -39,10 +39,11 @@
         "dates": ["2024-01"]
     }
     ```
-    _**\*note: pleas adjust the conn_dwh_secret variable as is you defined in DB\_\* key in .env file**_
+    _**\*note: pleas adjust the conn_dwh_secret variable and dags/silver_stage/profiles.yml as is you defined in DB\_\* key in .env file**_
     
     _*note: you can change dates in nyc_bronze_config to download or load taxi trip data in dates defined_
 4. then access airflow (https://localhost:8080) and execute silver, bronze pipelines
+5. After you finish the lab, ctrl+c or ^+c then run `bash labs-clean.sh`
 
 ## Descriptions
 The New York City Taxi and Limousine Commission (TLC), created in 1971, is the agency responsible for licensing and regulating New York City's Medallion (Yellow) taxi cabs, for-hire vehicles (community-based liveries, black cars and luxury limousines), commuter vans, and paratransit vehicles. This data has great rows and attributes so suitable to use for learning how to serve data end-to-end from sources into insight!
