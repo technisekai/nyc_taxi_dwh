@@ -260,8 +260,8 @@ services:
       <<: *airflow-common-env
       _AIRFLOW_DB_UPGRADE: 'true'
       _AIRFLOW_WWW_USER_CREATE: 'true'
-      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
-      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+      _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_ADMIN_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:-airflow}
       _PIP_ADDITIONAL_REQUIREMENTS: ''
     user: "0:0"
     volumes:
@@ -304,13 +304,13 @@ services:
   
   dwh-clickhouse:
     image: clickhouse:lts
-    container_name: dwh-db-clickhouse
+    container_name: $DB_HOST
     environment:
-      - CLICKHOUSE_USER=admin
-      - CLICKHOUSE_PASSWORD=admin123
+      - CLICKHOUSE_USER=$DB_ADMIN_USERNAME
+      - CLICKHOUSE_PASSWORD=$DB_ADMIN_PASSWORD
       - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1  # Enables RBAC & user management
     ports:
-      - "8123:8123"
+      - "$DB_PORT:$DB_PORT"
     restart: always
 
 volumes:
@@ -318,5 +318,5 @@ volumes:
 
 networks:
   default:
-    name: dwh-network
+    name: $DWH_NETWORK_NAME
     external: true
